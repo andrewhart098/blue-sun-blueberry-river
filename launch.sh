@@ -4,4 +4,4 @@ docker stop -t0 $(docker ps -q)
 
 docker-compose build
 
-docker-compose up
+docker-compose up app

@@ -17,7 +17,7 @@ const getKeyTypeAsync = promisify(client.type).bind(client);
 // This function assumes that the values will have a type of <set> or <list>
 async function getElementsAsync(key) {
         let keyType = await getKeyTypeAsync(key);
-        return keyType == 'set' ? await smembersAsync(key) : lRangeAsync(key, 0, -1);
+        return keyType == 'set' ? await smembersAsync(key) : await lRangeAsync(key, 0, -1);
 }
 
 // Returns if JS array contains anagrams or not
@@ -38,13 +38,13 @@ async function processKeys(keys) {
     
     for (const i in keys) {
         let  arr = await getElementsAsync(keys[i]);
-        
-        if (doesNotContainAnagram(arr)) {
+
+        if (doesNotContainAnagram(arr.slice())) {
             minMaxDifferences += Math.max(...arr) - Math.min(...arr);
         }
     }
 
-    console.log(minMaxDifferences);
+    return minMaxDifferences;
 }
 
 // Call redis client using exec function
@@ -59,6 +59,19 @@ client
         console.log('Connected to DB successfully '); 
 
         processKeys(keys[1])
+            .then((minMaxDifferences) => {
+                http.get('http://answer:3000/' + minMaxDifferences, function(res, err) {
+                    if (err) throw err;
+
+                    if (res.statusCode == 400) {
+                        console.log('booo..you got it wrong :(');
+                    }
+
+                    if (res.statusCode == 200) {
+                        console.log('nice...you got it right :)');
+                    }
+                })
+            })
             .then(() => {
                 console.log("Closing connection to DB")
                 client.quit();
