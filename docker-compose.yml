@@ -9,6 +9,7 @@ services:
     links:
       - redis
       - answer
+    command: node app.js
 
   # A simple HTTP server to verify the checksum is correct
   answer:
